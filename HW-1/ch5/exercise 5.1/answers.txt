@@ -1,0 +1,3 @@
+1) alert — "hello 1"
+2) alert — "hello name"
+3) alert — "hello Ilya"

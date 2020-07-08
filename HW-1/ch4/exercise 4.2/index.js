@@ -1,0 +1,2 @@
+let thisPlanetName = '';
+	currUserName = '';
