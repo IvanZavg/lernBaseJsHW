@@ -5,9 +5,9 @@ function getAge (birth) {
 	let currDate = new Date(),
 	    currYear = currDate.getFullYear(),
 	    currMonth = currDate.getMonth(),
-        currDayNumber = currDate.getDate();
+	    currDayNumber = currDate.getDate();
 
-	let	birthDate = new Date(birth),
+	let birthDate = new Date(birth),
 	    birthYear = birthDate.getFullYear(),
 	    birthMonth = birthDate.getMonth(),
   	    birthDayNumber = birthDate.getDate();
