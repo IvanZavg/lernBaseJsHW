@@ -50,15 +50,27 @@ class Client  {
 
   //Решил попробовать реализовать возможность возвращать из методов (таких как fetch и find) ссылки на экземпляры классов а не создавать новые
   //для этого решил создать массив с экземпляроами класса
-  static instancesClient = (function () { //инициализация массива экземпляров класса на основе входных данных
+  static instancesClient =  (function () { //инициализация массива экземпляров класса на основе входных данных
       let instClientArr = [];
 
       Client.clientsDataList.forEach((clientObj,index) => {
+        Client.checkID(instClientArr, clientObj.id);
         instClientArr.push(new Client(clientObj, true)); //создание массива экземпляров класса на основе входных данных
       });
 
       return instClientArr;
   })();
+
+  static checkID (arr, id){ //для предотвращения дублирования id
+    arr.forEach( (el) => {
+      if(el.id == id ){
+        throw new Error(`id-${id} already used`);
+      }
+      else if(typeof id !== 'number') {
+        throw new Error(`id-${id} is not a number`);
+      }
+    });  
+  }
 
   static destroy (id) {
     for(let i = 0; i < Client.clientsDataList.length; i++){ //перебираю массив объектов
@@ -106,6 +118,7 @@ class Client  {
     this.phone = data.phone;
 
     if (!itIsInit) { //проверка условия чтобы при инициализации не дублировать запись в clientsDataList
+      Client.checkID(Client.instancesClient, data.id);
       Client.clientsDataList.push(data);
       Client.instancesClient.push(this);  
     }      
@@ -202,11 +215,23 @@ class Card {
       let instСardArr = [];
 
       Card.cardsDataList.forEach((cardObj,index) => {
+        Card.checkID(instСardArr, cardObj.id);
         instСardArr.push(new Card(cardObj, true)); 
       });
 
       return instСardArr;
   })();
+
+  static checkID (arr, id){ //для предотвращения дублирования id
+    arr.forEach( (el) => {
+      if(el.id == id ){
+        throw new Error(`id-${id} already used`);
+      }
+      else if(typeof id !== 'number') {
+        throw new Error(`id-${id} is not a number`);
+      }
+    });  
+  }
 
   static fetch () {
      return Card.instancesСards;
@@ -248,6 +273,7 @@ class Card {
     this.clientId = data.clientId;
 
      if (!itIsInit) { //проверка условия чтобы при инициализации не дублировать запись в clientsDataList
+      Card.checkID(Card.instancesСards, data.id)
       Card.cardsDataList.push(data);
       Card.instancesСards.push(this);  
     }
@@ -282,7 +308,7 @@ let testClient = new Client({
                             address: 'Vasilivska 1',
                             phone: '08311111111111'
                           });
-console.log(Client.instancesClient);                  //instances arr Array(4) [ {…}, {…}, {…}, {…} ]
+console.log(Client.instancesClient);                 //instances arr Array(4) [ {…}, {…}, {…}, {…} ]
 console.log(testClient.updateFirstName('Olyosha'));   //Olyosha
 console.log(testClient.getFirstName());               //Olyosha
 console.log(testClient.updateLastName('Olyoshkin'));  //Olyoshkin
