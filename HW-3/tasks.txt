@@ -1,0 +1,124 @@
+// «адание є1 ¬ходные данные
+
+var clients = [
+	{
+  	id: 0,
+  	firstName: 'FirstName1',
+    lastName: 'LastName1',
+    address: 'address1',
+    phone: 'phone1'
+  }, {
+  	id: 1,
+  	firstName: 'FirstName2',
+    lastName: 'LastName2',
+    address: 'address2',
+    phone: 'phone2'
+  }, {
+  	id: 2,
+  	firstName: 'FirstName3',
+    lastName: 'LastName3',
+    address: 'address3',
+    phone: 'phone3'
+  }
+];
+
+var cards = [
+	{
+  	id: 0,
+    clientId: 0,
+    number: '0000',
+    data: 1493034361601
+  }, {
+  	id: 1,
+    clientId: 0,
+    number: '0001',
+    data: 1493034301601
+  }, {
+  	id: 2,
+    clientId: 0,
+    number: '0002',
+    data: 1493034001601
+  }, {
+  	id: 3,
+    clientId: 1,
+    number: '1001',
+    data: 1493034101601
+  }
+];
+
+Ќаписать 2 класса:
+	- Client
+	- Card
+  
+класс Client имеет 5 входных параметра
+  - firstName
+  - lastName
+  - address
+  - phone
+  - id
+  
+ у экземпл€ра класса, есть следующие методы
+  ++- getFirstName/updateFirstName - получить/обновить firstName
+  ++- getLastName/updateLastName - получить/обновить lastName
+  ++- getFullName - получить/обновить полное им€ 
+  ++- getAddress/updateFirstName - получить address
+  ++- getPhone/updateFirstName - получить телефон
+  ++- update(data) - обновл€ет все пол€, которые переданные в объекте дата (все существующие, но не добавл€ет лишних)
+  ++- destroy - удал€ет клиента из массива входных данных
+  ++- getCards - возвращает массив экземпл€ров класса, которые принадлежат этому клиенту
+  +- addCard - добавл€ет карту клиенту в массив cards и возвращает ее (экземпл€р класса Cart)
+  
+  ј так же доступны слудующие статические методы
+  ++- fetch() - возвращает все клиентов (массив экземлп€ров класса Client)
+  ++- find(id) - вовращает клиента по id (экземлп€р класса Client)
+  ++- destroy(id) - удал€ет клиента по id (из массива clients)
+  ++- create(data) - создает клиента (а так же добавл€ет его в массив clients, в виде обычного объекта, по типу тех,  которые уже наход€тс€ в массиве) и возвращает его (как экземпл€р класса client) 
+  
+” класса Card есть следующих 5 параметров
+  - number
+  - expirationData
+  - cliendId
+  - id
+  
+  у экземпл€ра класса, есть следующие методы
+  ++- getNumber - получить number
+  ++- getClient - возвращает клиента по clientId (экземпл€р класса Client)
+  ++- getExpidationData/updateExpirationData - получить/обновить полное expirationData 
+  
+  ј так же доступны слудующие статические методы
+  ++- fetch() - возвращает все карты (массив экземлп€ров класса Cart)
+  ++- find(id) - вовращает карту по id (экземлп€р класса Cart)
+  ++- destroy(id) - удал€ет карту по id (из массива carts)
+  +- findByClient(clientId) - возвращает карту по clientId (экземпл€р класса Client)
+ 
+ѕример статического метода
+
+class SomeClassName() {
+  // ..
+  static someStaticMethod() {
+  
+  }
+}
+
+  
+  
+ѕримеры работы
+
+Client.fetch(); // возвращает всех клиентов в виде экземпл€ров класса client
+// [ new Client(clients[0]), new Client(clients[1]), ...]
+var client = Client.find(0);
+client.getFirstName(); // FirstName1
+client.getCards(); // возвращаетс€ массив экземпл€ров класса Cart которые относ€тс€ к этому клиенту
+// [ new Cart(...) ]
+
+// «адание є2
+–еализовать трЄхуровневое наследование с произвольными иерархи€ми 
+
+Ќапример
+
+User - > Moderator - > Admin
+
+Character - > Race - > Profession
+
+Game - > Single/Multi -> Action/RPG/etc... 
+
