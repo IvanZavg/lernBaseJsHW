@@ -1,18 +1,18 @@
 let clients = [
     {
-      id: 0,
+      id: 1,
       firstName: 'FirstName1',
       lastName: 'LastName1',
       address: 'address1',
       phone: 'phone1'
     }, {
-      id: 1,
+      id: 2,
       firstName: 'FirstName2',
       lastName: 'LastName2',
       address: 'address2',
       phone: 'phone2'
     }, {
-      id: 2,
+      id: 3,
       firstName: 'FirstName3',
       lastName: 'LastName3',
       address: 'address3',
@@ -44,70 +44,75 @@ let cards = [
   }
 ];
 
-class Client  {
 
-  static clientsDataList = clients; //сохранение входных данных в поле класса
+class BankDataFactory {
+  static availableClasses = {};
 
-  //Решил попробовать реализовать возможность возвращать из методов (таких как fetch и find) ссылки на экземпляры классов а не создавать новые
-  //для этого решил создать массив с экземпляроами класса
-  static instancesClient =  (function () { //инициализация массива экземпляров класса на основе входных данных
-      let instClientArr = [];
+  static savedClassId = {};
 
-      Client.clientsDataList.forEach((clientObj,index) => {
-        Client.checkID(instClientArr, clientObj.id);
-        instClientArr.push(new Client(clientObj, true)); //создание массива экземпляров класса на основе входных данных
-      });
+  static addClass (className, classRef, classCash) {
+    this.availableClasses[className] = {};
+    this.availableClasses[className].classRef = classRef;
+    this.availableClasses[className].classCash = classCash;
+  }
 
-      return instClientArr;
-  })();
+  static create (className, data) {
+    if (!this.availableClasses[className]) throw new Error(`Required class-${className} is not available`);
 
-  static checkID (arr, id){ //для предотвращения дублирования id
-    arr.forEach( (el) => {
-      if(el.id == id ){
+    let createdClass = this.availableClasses[className].classRef;
+    let classCash = this.availableClasses[className].classCash;
+
+    if (!this.savedClassId[className]) {
+      this.savedClassId[className] = [data.id];
+    }
+    else {
+      this.checkID(this.savedClassId[className], data.id);
+      this.savedClassId[className].push(data.id);
+    }
+
+    if (!!classCash) {
+      let cash = createdClass[classCash];
+
+      cash.push(new createdClass(data));
+
+      return cash[cash.length - 1];
+    }
+    
+    return new createdClass(data);
+  }
+
+  static createMany (className, arrData) {
+    return arrData.map(clientData => this.create(className,clientData));
+  }
+
+  static checkID (arr, id) { //для предотвращения дублирования id
+    arr.forEach( (savedId) => {
+      if (savedId == id ) {
         throw new Error(`id-${id} already used`);
       }
-      else if(typeof id !== 'number') {
+      else if (typeof id !== 'number') {
         throw new Error(`id-${id} is not a number`);
       }
     });  
   }
 
+}
+
+
+class Client  {
+  static instancesClient = [];
+
   static destroy (id) {
-    for(let i = 0; i < Client.clientsDataList.length; i++){ //перебираю массив объектов
-      if(Client.clientsDataList[i]['id'] === id) { //нахожу нужный объект по соответствию id
-        Client.clientsDataList.splice(i,1);  //удаляю из массива объектов
-        Client.instancesClient.splice(i,1);  //удаляю из массива экземпляров класса
-        break;     
-      }
-    }
-    return Client.instancesClient;
-  }
-
-  static create (data) {
-  //решил добавить возможность создавать сразу множество объектов      
-    if(Array.isArray(data)){
-      let clientsArr = [];
-
-      data.forEach(clientObj => {
-        clientsArr.push(new Client(clientObj));
-      });
-
-      return clientsArr;
-    }
-
-    return new Client(data);
+    this.instancesClient = this.instancesClient.filter(client => client.id != id)
+    return this;
   }
 
   static fetch (data) {
-   return Client.instancesClient; //просто возвращает массив с экземплярами класса
+   return this.instancesClient; 
   }
 
   static find (id) {
-    for(let i = 0; i < Client.instancesClient.length; i++){ //перебираю массив объектов экземпляров класса
-      if(Client.instancesClient[i]['id'] === id) { //нахожу нужный экземпляр по соответствию id
-        return Client.instancesClient[i]; 
-      }
-    }
+    return this.instancesClient.find(client => client.id === id);
   }
 
   constructor (data, itIsInit = false) {
@@ -116,12 +121,6 @@ class Client  {
     this.lastName = data.lastName;
     this.address = data.address;
     this.phone = data.phone;
-
-    if (!itIsInit) { //проверка условия чтобы при инициализации не дублировать запись в clientsDataList
-      Client.checkID(Client.instancesClient, data.id);
-      Client.clientsDataList.push(data);
-      Client.instancesClient.push(this);  
-    }      
   };
 
   getFirstName () {
@@ -129,7 +128,8 @@ class Client  {
   }
 
   updateFirstName (newName) {
-    return this.firstName = newName;
+    this.firstName = newName;
+    return this;
   }
 
   getLastName () {
@@ -137,7 +137,8 @@ class Client  {
   }
 
   updateLastName (newLastName) {
-    return this.lastName = newLastName;
+    this.lastName = newLastName;
+    return this;
   }
 
   getAddress () {
@@ -145,7 +146,8 @@ class Client  {
   }
 
   updateAddress (newAdress) {
-    return this.address = newAdress;
+    this.address = newAdress;
+    return this;
   }
 
   getPhone () {
@@ -153,40 +155,28 @@ class Client  {
   }
 
   updatePhone (newPhone) {
-    return this.phone = newPhone;
+    this.phone = newPhone;
+    return this;
   }
 
   update (data) {
-    let thisKeys = Object.keys(this), //получаю ключи тек объекта для дальнейшего обновления clientsDataList
-        thisId = this.id, //получаю id текущего объекта чтобы потом найти нужный объект в clientsDataList
-        objUpdClientsList = {}; //создаю пустой объект, который заполню с учетом новых значений и им заменю объект в clientsDataList
-
     for(let key in data){
-      if(this.hasOwnProperty(key) && key !== 'id') this[key] = data[key]; //меняю свойства на основе переданых данных   
+      if(this.hasOwnProperty(key) && key !== 'id') this[key] = data[key]; 
     }   
-
-    thisKeys.forEach((el) => {
-      objUpdClientsList[el] = this[el];  //наполняю objUpdClientsList обновленными свойствами
-    });
-  
-    for(let i = 0; i < Client.clientsDataList.length; i++){
-      if(Client.clientsDataList[i]['id'] === thisId) {
-        Client.clientsDataList[i] = objUpdClientsList; //заменяю объект в clientsDataList
-        break;    
-      }
-    }
 
     return this;   
   }
 
   destroy () {
     Client.destroy(this.id);
-    return Client.clientsDataList;
+    return Client.instancesClient;
   }
 
   addCard (data) {
     data.clientId = this.id;
-    return new Card(data);
+    new Card(data);
+
+    return this;
   }
 
   getCards (id){
@@ -205,78 +195,35 @@ class Client  {
 
     return this.FullName;
   }   
+
 }
 
 
 class Card {
-
-  static cardsDataList = cards; 
-  static instancesСards = (function () { 
-      let instСardArr = [];
-
-      Card.cardsDataList.forEach((cardObj,index) => {
-        Card.checkID(instСardArr, cardObj.id);
-        instСardArr.push(new Card(cardObj, true)); 
-      });
-
-      return instСardArr;
-  })();
-
-  static checkID (arr, id){ //для предотвращения дублирования id
-    arr.forEach( (el) => {
-      if(el.id == id ){
-        throw new Error(`id-${id} already used`);
-      }
-      else if(typeof id !== 'number') {
-        throw new Error(`id-${id} is not a number`);
-      }
-    });  
-  }
+  static instancesСards = [];
 
   static fetch () {
-     return Card.instancesСards;
+     return this.instancesСards;
   }
 
   static find (id) {
-    for(let i = 0; i < Card.instancesСards.length; i++) { //перебираю массив объектов экземпляров класса
-      if(Card.instancesСards[i]['id'] === id) { //нахожу нужный экземпляр по соответствию id
-        return Card.instancesСards[i]; 
-      }
-    }
+    return this.instancesСards.find(client => client.id === id);
   }
 
   static destroy (id) {
-    for(let i = 0; i < Card.cardsDataList.length; i++){ //перебираю массив объектов
-      if(Card.cardsDataList[i]['id'] === id) { //нахожу нужный объект по соответствию id
-        Card.cardsDataList.splice(i,1);  //удаляю из массива объектов
-        Card.instancesСards.splice(i,1);  //удаляю из массива экземпляров класса
-        break;     
-      }
-    }
-    return Card.instancesСards;
+    this.instancesСards = this.instancesСards.filter(client => client.id != id)
+    return this;
   }
 
   static findByClient (clientId) {
-    let cardsArr = [];
-
-    for(let i = 0; i < Card.instancesСards.length; i++) {
-      if(Card.instancesСards[i]['clientId'] === clientId) cardsArr.push(Card.instancesСards[i]);
-    }
-
-    return cardsArr;
+    return this.instancesСards.filter(card => card.clientId === clientId)
   }
 
-  constructor (data, itIsInit = false) {
+  constructor (data) {
     this.id = data.id;
     this.number = data.number;
     this.expirationData = data.data;
     this.clientId = data.clientId;
-
-     if (!itIsInit) { //проверка условия чтобы при инициализации не дублировать запись в clientsDataList
-      Card.checkID(Card.instancesСards, data.id)
-      Card.cardsDataList.push(data);
-      Card.instancesСards.push(this);  
-    }
   }
 
   getNumber () {
@@ -292,86 +239,18 @@ class Card {
   }
 
   updateExpirationData (newExpirationData) {
-    return this.expirationData = newExpirationData;
+    this.expirationData = newExpirationData;
+    return this
   }
+
 }
 
 
+BankDataFactory.addClass('client', Client, 'instancesClient');
+BankDataFactory.addClass('card', Card, 'instancesСards');
 
-//Проверка Client
-/*
-console.log(Client.instancesClient) //instances arr Array(3) [ {…}, {…}, {…} ]
-let testClient = new Client({
-                            id: 4,
-                            firstName: 'Vasy',
-                            lastName: 'Vaskin',
-                            address: 'Vasilivska 1',
-                            phone: '08311111111111'
-                          });
-console.log(Client.instancesClient);                 //instances arr Array(4) [ {…}, {…}, {…}, {…} ]
-console.log(testClient.updateFirstName('Olyosha'));   //Olyosha
-console.log(testClient.getFirstName());               //Olyosha
-console.log(testClient.updateLastName('Olyoshkin'));  //Olyoshkin
-console.log(testClient.getLastName());                //Olyoshkin
-console.log(testClient.fullName);                     //Olyoshkin Olyosha
-console.log(testClient.fullName = 'Petrov Pety');     //Petrov Pety
-console.log(testClient.getAddress());                 //Vasilivska 1
-console.log(testClient.updateAddress('Green street'));//Green street
-console.log(testClient.getPhone());                   //08311111111111
-console.log(testClient.updatePhone('111111111111'));  //111111111111
+let incomeDataClients = BankDataFactory.createMany ('client', clients);
+let incomeDataCards = BankDataFactory.createMany ('card', cards);
 
-console.log(testClient.update({  
-                              firstName: 'Test',
-                              lastName: 'Test',
-                              test: 'test'
-                            }));      // Object { id: 4, firstName: "Test", lastName: "Test", ...}
-console.log(Client.instancesClient);  //(4) […] ... { id: 4, firstName: "Test", lastName: "Test", … }
-console.log(testClient.destroy());    //Array(3) [ {…}, {…}, {…} ]
-
-console.log(Client.instancesClient[0].getCards()); //Array(3) ... 1: Object { id: 1, number: "0001", expirationData: 1493034301601, … } ...
-console.log(Client.instancesClient[0].addCard({
-                                                  id: 5,
-                                                  number: '1009',
-                                                  data: 1000000000001
-                                                }));
-console.log(Client.instancesClient[0].getCards()); //Array(4) ... 3: Object { id: 5, number: "1009", expirationData: 1000000000001, … }
-*/
-
-//Client Class methods
-/*
-console.log(Client.fetch());    //Array(3) [ {…}, {…}, {…} ]
-console.log(Client.find(0));    //{ id: 0, firstName: "FirstName1", lastName: "LastName1", address: "address1", phone: "phone1" }
-console.log(Client.destroy(1)); // Array [ {…}, {…} ]
-console.log(Client.create({
-                            id: 5,
-                            firstName: 'Vasy',
-                            lastName: 'Vaskin',
-                            address: 'Vasilivska 1',
-                            phone: '08311111111111'
-                          }));       //{ id: 5, firstName: "Vasy", lastName: "Vaskin", address: "Vasilivska 1", phone: "08311111111111" }
-console.log(Client.instancesClient); //Array(3) [ {…}, {…}, {…} ]
-*/
-
-//Проверка Card
-/*
-console.log(Card.instancesСards); // Array(4) [ {…}, {…}, {…}, {…} ]
-let testCard = new Card({
-                            id: 5,
-                            clientId: 1,
-                            number: '1009',
-                            data: 1000000000001
-                          });
-console.log(Card.instancesСards);   // Array(5) ... 4: Object { id: 5, number: "1009", expirationData: 1000000000001, … }
-console.log(testCard.getNumber());  // 1009
-console.log(testCard.getClient());  //Object { id: 1, firstName: "FirstName2", lastName: "LastName2", ...}
-console.log(testCard.updateExpirationData(20000000000002)); // 20000000000002
-console.log(testCard.getExpirationData(20000000000002));    // 20000000000002
-*/
-
-//Client Class methods
-/*
-console.log(Card.fetch());   // Array(4) [ {…}, {…}, {…}, {…} ]
-console.log(Card.find(0));   // Object { id: 0, number: "0000", expirationData: 1493034361601, clientId: 0 }
-console.log(Card.destroy(1));      // Array(3) [ {…}, {…}, {…} ]
-console.log(Card.findByClient(1)); // 0: Object { id: 3, number: "1001", expirationData: 1493034101601, … }
-*/
+console.log(incomeDataClients);
+console.log(incomeDataCards);
