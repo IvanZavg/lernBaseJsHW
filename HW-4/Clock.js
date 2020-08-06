@@ -1,3 +1,5 @@
+import {DateFormat} from '/DateFormat.js';
+
 class Clock extends DateFormat {
   constructor (format, date) {
     super(format);
@@ -21,3 +23,5 @@ class Clock extends DateFormat {
 }
 
 let clock = new Clock('hh:ii:ss dd/mm/yyyy');
+
+console.log(2);
